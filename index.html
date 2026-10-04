@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FuzzyTemp | Smart Temperature Control</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#071326;color:#f4f7ff}
+header{position:sticky;top:0;z-index:10;background:#071326ee;backdrop-filter:blur(15px);border-bottom:1px solid #243651}
+nav{max-width:1200px;margin:auto;padding:17px 24px;display:flex;justify-content:space-between;align-items:center;gap:15px}
+.logo{font-size:25px;font-weight:800;color:#61c8ff}
+.logo span{color:white}
+.nav-links{display:flex;flex-wrap:wrap;gap:5px}
+.nav-links button{border:0;color:#d7e5fa;background:transparent;font-size:14px;padding:10px 12px;cursor:pointer;border-radius:9px}
+.nav-links button:hover{background:#17365a;color:#69d2ff}
+.hero{max-width:1200px;min-height:570px;padding:80px 25px;margin:auto;display:grid;grid-template-columns:1.2fr .8fr;align-items:center;gap:45px}
+.tag{color:#65cfff;letter-spacing:3px;font-size:12px;font-weight:bold;margin-bottom:22px}
+h1{font-size:clamp(38px,5.4vw,68px);line-height:1.1;margin-bottom:22px}
+h1 span{color:#60c9ff}
+.desc{color:#aabbd3;font-size:17px;line-height:1.8}
+.actions{display:flex;flex-wrap:wrap;gap:13px;margin-top:30px}
+.btn{padding:13px 22px;border-radius:10px;font-size:14px;font-weight:bold;cursor:pointer;border:1px solid #4bbfff;transition:.25s}
+.primary{background:#39a9ed;color:#041426}
+.secondary{background:transparent;color:white}
+.btn:hover{transform:translateY(-3px);box-shadow:0 8px 25px #36a8f444}
+.visual{min-height:350px;border:1px solid #28527b;border-radius:30px;background:radial-gradient(circle at 50% 40%,#164b7b,#0c203c 65%);display:flex;flex-direction:column;justify-content:center;align-items:center;box-shadow:0 15px 60px #1688e522;position:relative;overflow:hidden}
+.thermo{font-size:95px;animation:float 3s ease-in-out infinite}
+.visual h2{margin-top:18px;color:#79d8ff}
+.visual p{color:#b9cde5;margin-top:8px}
+@keyframes float{50%{transform:translateY(-12px)}}
+.section{max-width:1200px;padding:55px 25px;margin:auto}
+.section-title{font-size:32px;margin-bottom:12px}
+.sub{color:#aabbd3;margin-bottom:28px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:18px}
+.card{background:linear-gradient(145deg,#112947,#0b1b32);border:1px solid #244361;border-radius:17px;padding:23px;transition:.3s}
+.card:hover{transform:translateY(-6px);border-color:#4abfff;box-shadow:0 10px 30px #229de322}
+.emoji{font-size:32px;margin-bottom:13px}
+.card h3{margin-bottom:9px;color:#80d6ff}
+.card p{color:#b2c3d8;font-size:14px;line-height:1.7}
+.simulator{max-width:800px;margin:auto;padding:30px;background:linear-gradient(145deg,#112947,#0b1b32);border:1px solid #2c5378;border-radius:22px}
+.simulator h3{font-size:22px;margin-bottom:22px}
+.temp{color:#67d1ff;font-size:44px;font-weight:bold;text-align:center;margin:12px 0}
+input[type=range]{width:100%;accent-color:#4bbfff;margin:20px 0;cursor:pointer}
+.readings{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:20px 0}
+.reading{background:#0a192d;border:1px solid #254462;border-radius:13px;padding:17px 10px;text-align:center}
+.reading small{color:#aabbd3;display:block;margin-bottom:8px}
+.reading strong{font-size:17px;color:#70d4ff}
+.progress{height:12px;background:#243851;border-radius:20px;overflow:hidden}
+.progress div{height:100%;width:50%;background:linear-gradient(90deg,#3bc7ed,#5377ff);border-radius:20px;transition:width .3s}
+.hint{color:#aabbd3;font-size:12px;margin-top:15px}
+footer{border-top:1px solid #243651;padding:27px;text-align:center;color:#aabbd3;margin-top:45px}
+
+/* FULL SCREEN POPUP */
+.modal{
+ display:none;position:fixed;inset:0;z-index:100;
+ width:100%;height:100dvh;
+ background:#071326;
+ overflow-y:auto;
+}
+.modal.show{display:block;animation:fade .25s ease}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.modal-header{
+ position:sticky;top:0;z-index:2;
+ background:#071326ee;backdrop-filter:blur(14px);
+ border-bottom:1px solid #294360;
+ padding:18px 5%;
+ display:flex;align-items:center;justify-content:space-between;
+}
+.modal-logo{font-size:22px;font-weight:bold;color:#61c8ff}
+.close{
+ border:1px solid #3b5b7c;border-radius:50%;
+ width:43px;height:43px;background:#122b48;
+ color:white;font-size:27px;cursor:pointer;
+}
+.close:hover{background:#24496c}
+.modal-content{
+ max-width:1100px;margin:auto;
+ padding:65px 28px 90px;
+ min-height:calc(100dvh - 80px);
+}
+.modal-content h2{font-size:clamp(30px,5vw,45px);color:#72d4ff;margin-bottom:22px}
+.modal-content h3{color:#80d6ff;margin-bottom:10px}
+.modal-content p,.modal-content li{color:#c2d1e5;line-height:1.9;font-size:16px}
+.modal-content ul{padding-left:23px;margin:15px 0}
+.modal-content li{margin-bottom:9px}
+.modal-content .card{margin-bottom:17px}
+.modal-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:17px;margin-top:25px}
+.feedback-form{max-width:650px}
+.feedback-form label{display:block;color:#c2d1e5;margin:20px 0 8px}
+.feedback-form textarea,.feedback-form input[type=text]{
+ width:100%;padding:15px;border:1px solid #365678;
+ border-radius:12px;background:#0a192d;color:white;
+ font:inherit;outline:none;
+}
+.feedback-form textarea{min-height:150px;resize:vertical}
+.feedback-form textarea:focus,.feedback-form input:focus{border-color:#61c8ff}
+.stars{display:flex;gap:12px;font-size:35px;color:#647c99;cursor:pointer}
+.stars span.active{color:#ffc84b}
+.submit{margin-top:20px;padding:14px 25px;background:#39a9ed;color:#041426;border:0;border-radius:10px;font-weight:bold;cursor:pointer}
+.status{margin-top:15px;color:#80d6ff}
+@media(max-width:760px){
+ nav{flex-direction:column;padding:14px 10px}
+ .nav-links{justify-content:center;gap:2px}
+ .nav-links button{padding:8px;font-size:12px}
+ .hero{grid-template-columns:1fr;padding-top:55px;gap:35px}
+ .visual{min-height:260px}
+ .section-title{font-size:26px}
+ .readings{grid-template-columns:1fr}
+ .modal-content{padding:40px 20px 70px}
+ .modal-header{padding:12px 18px}
+}
+</style>
+</head>
+<body>
+
+<header>
+<nav>
+ <div class="logo">🌡️ Fuzzy<span>Temp</span></div>
+ <div class="nav-links">
+  <button onclick="openPopup('home')">Home</button>
+  <button onclick="openPopup('about')">About</button>
+  <button onclick="openPopup('working')">Working</button>
+  <button onclick="openPopup('fuzzy')">Fuzzy Logic</button>
+  <button onclick="openPopup('components')">Components</button>
+  <button onclick="openPopup('simulation')">Simulation</button>
+  <button onclick="openPopup('feedback')">Feedback</button>
+ </div>
+</nav>
+</header>
+
+<main>
+<section class="hero">
+ <div>
+  <div class="tag">SMART TEMPERATURE CONTROL SYSTEM</div>
+  <h1>Intelligent <span>Temperature</span> Control</h1>
+  <p class="desc">A fuzzy logic-based smart system that senses temperature and automatically adjusts the cooling level for intelligent temperature management.</p>
+  <div class="actions">
+   <button class="btn primary" onclick="openPopup('about')">Explore Project →</button>
+   <button class="btn secondary" onclick="openPopup('simulation')">Try Simulation</button>
+  </div>
+ </div>
+ <div class="visual">
+  <div class="thermo">🌡️</div>
+  <h2>Smart Cooling</h2>
+  <p>Sense • Think • Control</p>
+ </div>
+</section>
+
+<section class="section">
+ <h2 class="section-title">Project Highlights</h2>
+ <p class="sub">A simple intelligent control system with fuzzy logic.</p>
+ <div class="cards">
+  <div class="card"><div class="emoji">🌡️</div><h3>Temperature Sensing</h3><p>Measures surrounding temperature using a sensor.</p></div>
+  <div class="card"><div class="emoji">🧠</div><h3>Fuzzy Logic</h3><p>Uses linguistic rules to decide the cooling level.</p></div>
+  <div class="card"><div class="emoji">⚙️</div><h3>Automatic Control</h3><p>Adjusts the cooling command based on temperature.</p></div>
+  <div class="card"><div class="emoji">📊</div><h3>Live Simulation</h3><p>Explore temperature changes and observe simulated output.</p></div>
+ </div>
+</section>
+
+<section class="section" id="simulation">
+ <h2 class="section-title">Interactive Simulation</h2>
+ <p class="sub">Move the slider to simulate different temperatures.</p>
+ <div class="simulator">
+  <h3>🌡️ Temperature Monitor</h3>
+  <div class="temp"><span id="tempValue">28</span>°C</div>
+  <input id="tempSlider" type="range" min="10" max="45" value="28">
+  <div class="readings">
+   <div class="reading"><small>Temperature State</small><strong id="state">Comfortable</strong></div>
+   <div class="reading"><small>Cooling Level</small><strong id="cooling">Medium</strong></div>
+   <div class="reading"><small>Fan PWM</small><strong id="pwm">150 / 255</strong></div>
+  </div>
+  <div class="progress"><div id="bar"></div></div>
+  <p class="hint">Simulation only. This slider does not read the physical sensor.</p>
+ </div>
+</section>
+</main>
+
+<footer>
+ <p>🌡️ FuzzyTemp | Fuzzy Logic-Based Smart Temperature Control</p>
+ <p style="margin-top:8px;font-size:12px">Academic Mini Project</p>
+</footer>
+
+<!-- FULL SCREEN POPUP -->
+<div class="modal" id="popup" role="dialog" aria-modal="true" aria-labelledby="popupTitle">
+ <div class="modal-header">
+  <div class="modal-logo">🌡️ FuzzyTemp</div>
+  <button class="close" onclick="closePopup()" aria-label="Close popup">×</button>
+ </div>
+ <div class="modal-content" id="popupContent"></div>
+</div>
+
+<script>
+const content = {
+ home: `
+  <h2 id="popupTitle">🏠 Welcome to FuzzyTemp</h2>
+  <p>Welcome to our Fuzzy Logic-Based System for Smart Temperature Control project.</p>
+  <div class="modal-grid">
+   <div class="card"><h3>Our Goal</h3><p>To demonstrate how fuzzy logic can automatically select a suitable cooling level based on temperature.</p></div>
+   <div class="card"><h3>Smart Technology</h3><p>Combines temperature sensing, fuzzy rules and automatic control.</p></div>
+  </div>
+  <p style="margin-top:25px">Explore the project, understand its working and try the interactive simulation.</p>`,
+ about: `
+  <h2 id="popupTitle">💡 About the Project</h2>
+  <p>This project presents a smart temperature control system that uses fuzzy logic to determine the required cooling level.</p>
+  <div class="modal-grid">
+   <div class="card"><h3>Problem Statement</h3><p>Basic ON/OFF controllers switch abruptly and do not provide gradual cooling control.</p></div>
+   <div class="card"><h3>Proposed Solution</h3><p>Fuzzy logic uses gradual membership values and IF–THEN rules to select low, medium or high cooling.</p></div>
+   <div class="card"><h3>Objectives</h3><p>Measure temperature, apply fuzzy rules, calculate cooling output and demonstrate automatic control.</p></div>
+  </div>`,
+ working: `
+  <h2 id="popupTitle">⚙️ How It Works</h2>
+  <p>The system follows five main steps:</p>
+  <div class="modal-grid">
+   <div class="card"><h3>01. Sense</h3><p>The LM35 sensor measures surrounding temperature.</p></div>
+   <div class="card"><h3>02. Fuzzify</h3><p>Temperature is mapped to Cold, Comfortable and Hot sets.</p></div>
+   <div class="card"><h3>03. Apply Rules</h3><p>IF–THEN rules decide the cooling response.</p></div>
+   <div class="card"><h3>04. Defuzzify</h3><p>Rule strengths are combined into a numerical output.</p></div>
+   <div class="card"><h3>05. Control</h3><p>Arduino sends a PWM command to a fan driver and updates the indicators.</p></div>
+  </div>
+  <div class="card" style="margin-top:25px"><h3>System Flow</h3><p>Temperature Sensor → Arduino → Fuzzy Logic → Cooling Decision → Fan / LEDs</p></div>`,
+ fuzzy: `
+  <h2 id="popupTitle">🧠 Fuzzy Logic Model</h2>
+  <p>Fuzzy logic handles gradual categories instead of only true or false values. A temperature can partially belong to two categories at once.</p>
+  <div class="modal-grid">
+   <div class="card"><h3>Input Sets</h3><p>❄️ Cold<br>🌤️ Comfortable<br>🔥 Hot</p></div>
+   <div class="card"><h3>Output Sets</h3><p>Low cooling<br>Medium cooling<br>High cooling</p></div>
+  </div>
+  <div class="card" style="margin-top:20px">
+   <h3>Fuzzy Rules</h3>
+   <p>IF temperature is Cold THEN cooling is Low.</p>
+   <p>IF temperature is Comfortable THEN cooling is Medium.</p>
+   <p>IF temperature is Hot THEN cooling is High.</p>
+  </div>
+  <p style="margin-top:20px">The prototype combines the rule strengths into a PWM output from 0 to 255.</p>`,
+ components: `
+  <h2 id="popupTitle">🔌 Project Components</h2>
+  <p>The main components required for the physical prototype are:</p>
+  <div class="modal-grid">
+   <div class="card"><h3>🔵 Arduino Uno</h3><p>Processes the sensor reading and fuzzy rules.</p></div>
+   <div class="card"><h3>🌡️ LM35 Sensor</h3><p>Measures the surrounding temperature.</p></div>
+   <div class="card"><h3>🔌 Breadboard & Wires</h3><p>Used to assemble the circuit.</p></div>
+   <div class="card"><h3>💡 LEDs & Resistors</h3><p>Indicate low, medium and high cooling levels.</p></div>
+   <div class="card"><h3>🌀 Optional DC Fan</h3><p>A low-voltage fan demonstrates cooling output.</p></div>
+   <div class="card"><h3>⚡ Fan Driver</h3><p>A suitable transistor or MOSFET driver controls the fan.</p></div>
+  </div>
+  <p style="margin-top:20px">Never connect a fan motor directly to an Arduino GPIO pin. Use a suitable driver and low-voltage supply.</p>`,
+ simulation: `
+  <h2 id="popupTitle">📊 Temperature Simulation</h2>
+  <p>Use the temperature slider on the main page to change the simulated input and observe the fuzzy controller's output.</p>
+  <div class="card" style="margin-top:25px"><h3>What to Observe</h3><p>Cold temperatures generally produce lower cooling commands, while hot temperatures produce higher commands. Intermediate temperatures can blend multiple fuzzy rules.</p></div>
+  <button class="btn primary" style="margin-top:25px" onclick="closePopup();document.getElementById('simulation').scrollIntoView({behavior:'smooth'})">Go to Simulator ↓</button>
+  <p style="margin-top:20px">This is a browser simulation, not a live connection to Arduino.</p>`,
+ feedback: `
+  <h2 id="popupTitle">⭐ Your Feedback</h2>
+  <p>We value your feedback about our Fuzzy Logic-Based Smart Temperature Control project.</p>
+  <form class="feedback-form" id="feedbackForm">
+   <label for="feedbackName">Your Name</label>
+   <input type="text" id="feedbackName" placeholder="Enter your name" required>
+   <label>Rate Our Project</label>
+   <div class="stars" id="stars" aria-label="Star rating">
+    <span data-rating="1">★</span><span data-rating="2">★</span><span data-rating="3">★</span><span data-rating="4">★</span><span data-rating="5">★</span>
+   </div>
+   <input type="hidden" id="rating" value="0">
+   <label for="feedbackMessage">Your Feedback</label>
+   <textarea id="feedbackMessage" placeholder="Write your feedback here..." required></textarea>
+   <button class="submit" type="submit">Submit Feedback →</button>
+   <p class="status" id="feedbackStatus" aria-live="polite"></p>
+  </form>
+  <p style="font-size:12px;margin-top:25px">Demo form: feedback is not sent or stored online.</p>`
+};
+
+function openPopup(page){
+ document.getElementById('popupContent').innerHTML=content[page]||content.home;
+ const modal=document.getElementById('popup');
+ modal.classList.add('show');
+ document.body.style.overflow='hidden';
+ if(page==='feedback') setupFeedback();
+}
+function closePopup(){
+ document.getElementById('popup').classList.remove('show');
+ document.body.style.overflow='';
+}
+document.addEventListener('keydown',e=>{
+ if(e.key==='Escape')closePopup();
+});
+function setupFeedback(){
+ let selected=0;
+ const stars=document.querySelectorAll('#stars span');
+ stars.forEach(star=>{
+  star.addEventListener('click',()=>{
+   selected=Number(star.dataset.rating);
+   document.getElementById('rating').value=selected;
+   stars.forEach(s=>s.classList.toggle('active',Number(s.dataset.rating)<=selected));
+  });
+ });
+ document.getElementById('feedbackForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  if(selected===0){
+   document.getElementById('feedbackStatus').textContent='Please select a star rating.';
+   return;
+  }
+  document.getElementById('feedbackStatus').textContent=
+   'Thank you for your feedback! This demo does not send or save responses.';
+  e.target.reset();
+  selected=0;
+  stars.forEach(s=>s.classList.remove('active'));
+ });
+}
+// Slider simulation
+const slider=document.getElementById('tempSlider');
+function membership(t){
+ const cold=t<=22?1:t>=28?0:(28-t)/6;
+ const comfortable=t<=22||t>=35?0:t<=28?(t-22)/6:(35-t)/7;
+ const hot=t<=30?0:t>=36?1:(t-30)/6;
+ return {cold,comfortable,hot};
+}
+function update(){
+ const t=Number(slider.value),m=membership(t);
+ const total=m.cold+m.comfortable+m.hot;
+ const pwm=Math.round((m.cold*60+m.comfortable*150+m.hot*240)/Math.max(total,.001));
+ const state=m.cold>=m.comfortable&&m.cold>=m.hot?'Cold':
+  m.hot>=m.comfortable&&m.hot>=m.cold?'Hot':'Comfortable';
+ const cooling=pwm<105?'Low':pwm<195?'Medium':'High';
+ document.getElementById('tempValue').textContent=t;
+ document.getElementById('state').textContent=state;
+ document.getElementById('cooling').textContent=cooling;
+ document.getElementById('pwm').textContent=pwm+' / 255';
+ document.getElementById('bar').style.width=(pwm/255*100)+'%';
+}
+slider.addEventListener('input',update);
+update();
+</script>
+</body>
+</html>
